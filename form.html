@@ -1,0 +1,106 @@
+<script src="https://www.gstatic.com/firebasejs/4.7.0/firebase.js"></script>
+
+<style>
+  .labels {
+    width: 100%;
+    display: block;
+  }
+  .inputs {
+    width: 490px;
+    height: 40px;
+    margin-right: 20px;
+    padding-left: 5px;
+    font-size:0.8em;
+    background: #F9F9F9;
+    border: solid 1px #d7d7d7
+  }
+  .sqs-block-code {
+    max-width: 100%;
+    padding: 20px;
+    width: 100%;
+  }
+  button[type=submit] {
+  	border-radius: 300px;
+    background: #232323;
+    color: white;
+    font-family: Raleway;
+    font-weight: 400;
+    font-style: normal;
+    text-transform: none;
+    letter-spacing: .5px;
+    height: 42px;
+    width: 120px;
+  }
+</style>
+<form name="upload" id="upload" onsubmit="return validateForm()">
+  <p>
+    <label for="name" class="labels">Name *</label>
+    <input type="text" id="firstname" name="firstname" placeholder="first name" class="inputs" required/>
+    <input type="text" id="lastname" name="lastname" placeholder="last name" class="inputs" required/>
+  </p>
+  <p>
+    <label for="name" class="labels">Email Address *</label>
+    <input type="text" id="email" name="email" class="inputs" required/>
+  </p>
+  <p>
+    <label for="phone" class="labels">Phone *</label>
+    <input type="text" id="phone" name="phone" class="inputs" required/>
+  </p> 
+  <p>
+    <label for="images" class="labels">Upload CV *</label>
+    <input id="file" type="file" name="file" required/>
+  </p>
+  <p>
+    <button type="submit">Submit</button>  
+  </p>
+</form>
+<div></div>
+
+<script>
+  const uid = () => '_' + Math.random().toString(36).substr(2, 9)
+  const extractExt = (file) => (file.name).match(/\.[0-9a-z]+$/i)[0]
+  const formElementsToData = (elements) => {
+    return [].reduce.call(elements, (data, element) => {
+      data[element.name] = element.value
+      return data
+    }, {})
+  }
+  const config = {
+    apiKey: "AIzaSyClfP4GnYyTypmMfYB2QjGjfEiiKVy0vxc",
+    authDomain: "admios-webpage.firebaseapp.com",
+    databaseURL: "https://admios-webpage.firebaseio.com",
+    projectId: "admios-webpage",
+    storageBucket: "admios-webpage.appspot.com",
+  }
+
+  let app = firebase.initializeApp(config)
+  let storageRef = app.storage().ref()
+  let dbRef = app.database()     
+  let form = document.getElementById("upload")
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault()
+    data = formElementsToData(form.elements)
+    delete data["file"] && delete data[""]
+    let file = document.getElementById("file").files[0] ? document.getElementById("file").files[0] : false
+
+    const applicantId = uid();
+    if (file) {
+      const filePromise = storageRef.child(`applicant/${applicantId + extractExt(file)}`).put(file);
+      filePromise
+        .then((results) => {
+          dbRef
+            .ref(`/applicant/${applicantId}`)
+            .set(Object.assign({}, data, {fileUrl:results.downloadURL}))
+            .then((results) => form.reset())
+        })
+        .catch((error) => console.error(error))
+    } else {
+      dbRef
+        .ref(`/applicant/${applicantId}`)
+        .set(data)
+        .then(() => form.reset())
+        .catch((error) => console.error(error))
+    }
+  })
+</script>
