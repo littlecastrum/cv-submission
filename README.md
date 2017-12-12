@@ -5,6 +5,8 @@ It uses firebase to relay the information sent in the form to the jobs@admios-sa
 
 The form.html is meant to be added as a code block to a Squarespace webpage (currently functional in the carrers view)
 
+To make modifications to the functionality create a firebase account and proyect and follow the instructions
+
 For deployment and further modifications:
 
 ### Form modifications
@@ -20,9 +22,14 @@ npm -g i firebase-tools
 firebase login
 git clone https://github.com/Admios/cv-submission.git
 
-# Modify config information in the form.html with you firebase account app & follow Form modifications instructions
+# Modify config information in the form.html with you firebase account 
+# app & follow Form modifications instructions
+
 # Make modifications to the functions/index.js file
-# To be able to send emails with your Gmail account: enable access to Less Secure Apps and Display Unlock Captcha. For accounts with 2-step verification enabled Generate an App Password
+
+# To be able to send emails with your Gmail account: enable access to 
+# Less Secure Apps and Display Unlock Captcha. For accounts with 2-step 
+# verification enabled Generate an App Password
 
 cd cv-submission/functions
 npm i
