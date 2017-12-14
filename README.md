@@ -16,7 +16,7 @@ For deployment and further modifications:
 - Click apply and safe for the page to accept the modifications
 
 ### Form submission
-- Request priviledges to the admios automation@admios-sa.com email (You will need password editing priviledges)
+- Request priviledges to the admios automation@admios-sa.com email (It is 2-step authenticated so contact ricardo.chavarria@admios-sa.com to login)
 - Go to https://myaccount.google.com/u/3/security to create an app password
 - Get into the Sign-in link, look for the "App password" option. It will require authentication again. Eliminate the current one and add another.
 - Copy the password provided
