@@ -5,9 +5,7 @@ It uses firebase to relay the information sent in the form to the jobs@admios-sa
 
 The form.html is meant to be added as a code block to a Squarespace webpage (currently functional in the carrers view)
 
-To make modifications to the functionality create a firebase account and proyect and follow the instructions
-
-For deployment and further modifications:
+To make modifications to the functionality follow the instructions:
 
 ### Form modifications
 - Request priviledges to the Admios Squarespace and once in browse towards the "Carrers" page
