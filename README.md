@@ -5,9 +5,7 @@ It uses firebase to relay the information sent in the form to the jobs@admios-sa
 
 The form.html is meant to be added as a code block to a Squarespace webpage (currently functional in the carrers view)
 
-To make modifications to the functionality create a firebase account and proyect and follow the instructions
-
-For deployment and further modifications:
+To make modifications to the functionality follow the instructions:
 
 ### Form modifications
 - Request priviledges to the Admios Squarespace and once in browse towards the "Carrers" page
@@ -16,25 +14,28 @@ For deployment and further modifications:
 - Click apply and safe for the page to accept the modifications
 
 ### Form submission
+- Request priviledges to the admios automation@admios-sa.com email (It is 2-step authenticated so contact ricardo.chavarria@admios-sa.com to login)
+- Go to https://myaccount.google.com/u/3/security to create an app password
+- Get into the Sign-in link, look for the "App password" option. It will require authentication again. Eliminate the current one and add another.
+- Copy the password provided
 
 ```bash
 npm -g i firebase-tools
+
 firebase login
+
 git clone https://github.com/Admios/cv-submission.git
 
-# Modify config information in the form.html with you firebase account 
-# app & follow Form modifications instructions
+firebase use --add cv-submission
 
-# Make modifications to the functions/index.js file
-
-# To be able to send emails with your Gmail account: enable access to 
-# Less Secure Apps and Display Unlock Captcha. For accounts with 2-step 
-# verification enabled Generate an App Password
+firebase functions:config:set gmail.email="automation@admios-sa.com" gmail.password="app_password"
 
 cd cv-submission/functions
+
 npm i
-firebase functions:config:set gmail.email="myusername@gmail.com" gmail.password="secretpassword"
+
 firebase deploy
 ```
 
+- You can now make changes and only need to execute ```firebase deploy``` to have them up on the cloud
 
