@@ -30,9 +30,20 @@
     letter-spacing: .5px;
     height: 42px;
     width: 120px;
+    cursor: pointer;
+  }
+  button[type=submit]:hover {
+    border-color: #8ABDD4;
+    border-width: 2px;
+  }
+  button[type=submit]:disabled {
+    background: #EFF0F1;
+    color: black;
+    cursor: wait;
   }
 </style>
-<form name="upload" id="upload" onsubmit="return validateForm()">
+
+<form name="upload" id="upload" >
   <p>
     <label for="name" class="labels">Name *</label>
     <input type="text" id="firstname" name="firstname" placeholder="first name" class="inputs" required/>
@@ -51,7 +62,7 @@
     <input id="file" type="file" name="file" required/>
   </p>
   <p>
-    <button type="submit">Submit</button>  
+    <button type="submit" name="submit">Submit</button>  
   </p>
 </form>
 <div></div>
@@ -59,18 +70,45 @@
 <script>
   const uid = () => '_' + Math.random().toString(36).substr(2, 9)
   const extractExt = (file) => (file.name).match(/\.[0-9a-z]+$/i)[0]
-  const formElementsToData = (elements) => {
-    return [].reduce.call(elements, (data, element) => {
-      data[element.name] = element.value
-      return data
-    }, {})
+  const validForm = (objForm) => {
+    const notEmptyInput = !Object.values(objForm).some((value) => value === "")
+    const firstnameValid = /^[a-zA-Z ]+$/.test(objForm.firstname)
+    const lastnameValid = /^[a-zA-Z ]+$/.test(objForm.lastname)
+    const emailValid = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(objForm.email)
+    const phoneValid = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im.test(objForm.phone)
+    return ![notEmptyInput, firstnameValid, lastnameValid, emailValid, phoneValid].some((bool) => bool === false)
   }
+  const validFile = (HTMLElement) => HTMLElement.files[0] ? HTMLElement.files[0] : false
+  const setData = (inputs, filePromiseUrl) => Object.assign({}, inputs, {fileUrl: filePromiseUrl})
+  const formToObj = (form) => ({    
+    [form.firstname.name]: form.firstname.value,
+    [form.lastname.name]: form.lastname.value,
+    [form.email.name]: form.email.value,
+    [form.phone.name]: form.phone.value
+  })
+
+  async function firebaseUpload (storageRef, dbRef, form, dir, file, inputs) {
+    form.submit.disabled = true
+    let storagePromise
+    let dbPromise
+    try {    
+      storagePromise = await storageRef.child(dir + extractExt(file)).put(file)
+      dbPromise = await dbRef.ref(dir).set(setData(inputs, storagePromise.downloadURL))
+      form.reset()
+      form.submit.disabled = false
+      return true
+    } catch(error) {
+      console.log(error, storagePromise, dbPromise)
+      return false
+    }
+  }
+
   const config = {
-    apiKey: "AIzaSyClfP4GnYyTypmMfYB2QjGjfEiiKVy0vxc",
-    authDomain: "admios-webpage.firebaseapp.com",
-    databaseURL: "https://admios-webpage.firebaseio.com",
-    projectId: "admios-webpage",
-    storageBucket: "admios-webpage.appspot.com",
+    apiKey: "AIzaSyB9PHbnBQaJrGtXo97DKcCbd3Wz8dcranE",
+    authDomain: "cv-submission.firebaseapp.com",
+    databaseURL: "https://cv-submission.firebaseio.com",
+    projectId: "cv-submission",
+    storageBucket: "cv-submission.appspot.com"
   }
 
   let app = firebase.initializeApp(config)
@@ -80,27 +118,12 @@
 
   form.addEventListener("submit", (event) => {
     event.preventDefault()
-    data = formElementsToData(form.elements)
-    delete data["file"] && delete data[""]
-    let file = document.getElementById("file").files[0] ? document.getElementById("file").files[0] : false
-
-    const applicantId = uid();
-    if (file) {
-      const filePromise = storageRef.child(`applicant/${applicantId + extractExt(file)}`).put(file);
-      filePromise
-        .then((results) => {
-          dbRef
-            .ref(`/applicant/${applicantId}`)
-            .set(Object.assign({}, data, {fileUrl:results.downloadURL}))
-            .then((results) => form.reset())
-        })
-        .catch((error) => console.error(error))
+    let inputs = formToObj(form)
+    let file = validFile(form.file)
+    if (validForm(inputs) && file) {    
+      firebaseUpload(storageRef, dbRef, form, `/applicant/${uid()}`, file, inputs)
     } else {
-      dbRef
-        .ref(`/applicant/${applicantId}`)
-        .set(data)
-        .then(() => form.reset())
-        .catch((error) => console.error(error))
+      console.log("not valid form")
     }
   })
 </script>
