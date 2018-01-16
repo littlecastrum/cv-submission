@@ -1,7 +1,7 @@
 # cv-submission
 
 This is a basic application form for the organization composed of First Name, Last Name, E-Mail, Phone & a Curriculum file.
-It uses firebase to relay the information sent in the form to the jobs@admios-sa.con account.
+It uses firebase to relay the information sent in the form to the jobs@admios-sa.con account and a welcoming message to the applicant.
 
 The form.html is meant to be added as a code block to a Squarespace webpage (currently functional in the carrers view)
 
@@ -34,8 +34,13 @@ cd cv-submission/functions
 
 npm i
 
+npm run build
+
 firebase deploy
 ```
 
+- Babel was added to be able to manage asynchronous calls in parallel in a terser maner. Changes to the function have to be made in the ```src``` folder and a ```npm run build``` have to be executed before deployment
+
 - You can now make changes and only need to execute ```firebase deploy``` to have them up on the cloud
+
 
