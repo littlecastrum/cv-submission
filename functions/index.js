@@ -26,7 +26,7 @@ var mailing = function () {
             messageToApplicant = {
               from: submitter + ' <noreply@firebase.com>',
               to: data.email,
-              subject: 'Succesful application',
+              subject: 'Succesful Application',
               text: '\n    Hi ' + data.firstname + ' ' + data.lastname + ',\n\n    Thank you for applying for a job at Admios! \n\n    We like qualified candidates who are motivated to keep growing and have a passion for learning and development. \n\n    We will be contacting you via email within a week (make sure to add this email as well as vanessa.arenas@admios-sa.com to your address book so we don\u2019t get sent to your spam folder). \n\n     Kind Regards,\n\n    The Admios Hiring Team\n    '
             };
             mailHR = mailTransport.sendMail(messageToHR);

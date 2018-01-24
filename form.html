@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.0.3/css/font-awesome.min.css">
 <script src="https://www.gstatic.com/firebasejs/4.7.0/firebase.js"></script>
 
 <style>
@@ -14,12 +15,20 @@
     background: #F9F9F9;
     border: solid 1px #d7d7d7
   }
+  .input-error {
+    border: #FF0000 1px solid;
+    border-radius: 5px; 
+  }
+  .input-success {
+    border: #31995B 1px solid;
+    border-radius: 5px;     
+  }
   .sqs-block-code {
     max-width: 100%;
     padding: 20px;
     width: 100%;
   }
-  button[type=submit] {
+  .submitter {
   	border-radius: 300px;
     background: #232323;
     color: white;
@@ -32,16 +41,100 @@
     width: 120px;
     cursor: pointer;
   }
-  button[type=submit]:hover {
+  .submitter:hover {
     border-color: #8ABDD4;
     border-width: 2px;
   }
-  button[type=submit]:disabled {
+  .submitter:disabled {
     background: #EFF0F1;
     color: black;
     cursor: wait;
   }
+  .message-box{
+    z-index: 3000;
+    top: -30px;
+    right: 500px;
+    width: 440px;
+    border-radius: 6px;
+    margin: 20px auto;
+    padding: auto 0;
+    position: fixed;
+  }
+  .message-box i {
+    vertical-align: middle;
+    padding: 20px;
+  }
+  .exit-button {
+    float: right;
+    opacity: .4;
+    cursor: pointer;
+  }
+  .exit-button:hover {
+    opacity: .8;
+  }
+  .message-text{
+    vertical-align: middle;
+  }
+  .message-box-error{
+    background-color: #ECC8C5;
+    border:  #ECC8C5 2px solid;
+    color: #B83C37;
+  }
+  .message-box-success{
+    background-color: #DDF3D5;
+    border:  #DDF3D5 2px solid;
+    color: #597151;
+  }
+  .loader {
+    width: 250px;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    position: absolute;
+    top: 40%;
+    left: 40%;
+    transform: translate(-50%,-50%);
+    font-family: helvetica, arial, sans-serif;
+    text-transform: uppercase;
+    font-weight: 900;
+    color: #232323;
+    letter-spacing: 0.2em;
+  }
+  .loader::before, .loader::after {
+    content: "";
+    display: block;
+    width: 15px;
+    height: 15px;
+    background: #232323;
+    position: absolute;
+    animation: load .7s infinite alternate ease-in-out;
+  } 
+  .loader::before {
+    top: 0;
+  } 
+  .loader::after {
+    bottom: 0;
+  }
+  @keyframes load {
+    0% { left: 0; height: 30px; width: 15px }
+    50% { height: 8px; width: 40px }
+    100% { left: 235px; height: 30px; width: 15px}
+  }
 </style>
+
+<div class="message-box message-box-error" id="error" hidden>
+  <i class="fa fa-ban fa-2x"></i>
+  <span class="message-text"> Some fields were not filled accordingly </span>
+  <i class="fa fa-times fa-2x exit-button" onclick="hide(this.parentElement)"></i>
+</div>
+
+<div class="message-box message-box-success" id="success" hidden>
+  <i class="fa fa-check fa-2x"></i>
+  <span class="message-text"> Your application has been sent </span>
+  <i class="fa fa-times fa-2x exit-button" onclick="hide(this.parentElement)"></i>
+</div>
+
+<div class="loader" id="loader" hidden>Sending...</div>
 
 <form name="upload" id="upload" >
   <p>
@@ -59,10 +152,10 @@
   </p> 
   <p>
     <label for="images" class="labels">Upload CV *</label>
-    <input id="file" type="file" name="file" required/>
+    <input id="file" type="file" name="file" required />
   </p>
   <p>
-    <button type="submit" name="submit">Submit</button>  
+    <button type="submit" name="submit" class="submitter">Submit</button>  
   </p>
 </form>
 <div></div>
@@ -70,13 +163,33 @@
 <script>
   const uid = () => '_' + Math.random().toString(36).substr(2, 9)
   const extractExt = (file) => (file.name).match(/\.[0-9a-z]+$/i)[0]
-  const validForm = (objForm) => {
-    const notEmptyInput = !Object.values(objForm).some((value) => value === "")
-    const firstnameValid = /^[a-zA-Z ]+$/.test(objForm.firstname)
-    const lastnameValid = /^[a-zA-Z ]+$/.test(objForm.lastname)
-    const emailValid = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(objForm.email)
-    const phoneValid = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im.test(objForm.phone)
-    return ![notEmptyInput, firstnameValid, lastnameValid, emailValid, phoneValid].some((bool) => bool === false)
+  const validForm = (form) => {
+    const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im
+    const nameRegex = /^[a-zA-Z]+$/
+    const firstnameValid = nameRegex.test(form.firstname.value)
+    const lastnameValid = nameRegex.test(form.lastname.value)
+    const emailValid = emailRegex.test(form.email.value)
+    const phoneValid = phoneRegex.test(form.phone.value)
+    const validationArr = [
+      { element: form.firstname, valid: firstnameValid }, 
+      { element: form.lastname, valid: lastnameValid },
+      { element: form.email, valid: emailValid }, 
+      { element: form.phone, valid: phoneValid } 
+    ]
+    const isValid = validationArr.some((validator) => validator.valid === false)
+    if (isValid) {
+      validationArr.forEach((obj) => {
+        if (obj.valid === false) {
+          obj.element.classList.add('input-error')
+          obj.element.classList.remove('input-success')
+        } else {
+          obj.element.classList.add('input-success')
+          obj.element.classList.remove('input-error')
+        }
+      })
+    }
+    return !isValid 
   }
   const validFile = (HTMLElement) => HTMLElement.files[0] ? HTMLElement.files[0] : false
   const setData = (inputs, filePromiseUrl) => Object.assign({}, inputs, {fileUrl: filePromiseUrl})
@@ -86,19 +199,31 @@
     [form.email.name]: form.email.value,
     [form.phone.name]: form.phone.value
   })
+  const isFormDisabler = (bool) => (form) => Object.values(form).forEach(elem => {elem.disabled = bool})
+  const formDisabled = isFormDisabler(true)
+  const formEnabled = isFormDisabler(false)
 
-  async function firebaseUpload (storageRef, dbRef, form, dir, file, inputs) {
-    form.submit.disabled = true
+  const isElementDisplay = (bool) => (elem) => elem.hidden = bool
+  const hide = (element) => {
+    isElementDisplay(true)(element)
+    return element
+  }
+  const show = (element) => {
+    isElementDisplay(false)(element)
+    return element
+  }
+
+  const firebaseUpload = async (storageRef, dbRef, form, dir, file, inputs) => {
+    formDisabled(form)
     let storagePromise
     let dbPromise
     try {    
       storagePromise = await storageRef.child(dir + extractExt(file)).put(file)
       dbPromise = await dbRef.ref(dir).set(setData(inputs, storagePromise.downloadURL))
       form.reset()
-      form.submit.disabled = false
+      formEnabled(form)
       return true
     } catch(error) {
-      console.log(error, storagePromise, dbPromise)
       return false
     }
   }
@@ -111,19 +236,26 @@
     storageBucket: "cv-submission.appspot.com"
   }
 
-  let app = firebase.initializeApp(config)
-  let storageRef = app.storage().ref()
-  let dbRef = app.database()     
-  let form = document.getElementById("upload")
+  const app = firebase.initializeApp(config)
+  const storageRef = app.storage().ref()
+  const dbRef = app.database()     
+  const form = document.getElementById("upload")
+  const errorMessage = document.getElementById("error")
+  const successMessage = document.getElementById("success")
+  const loader = document.getElementById("loader")
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
+    show(loader)
     event.preventDefault()
-    let inputs = formToObj(form)
     let file = validFile(form.file)
-    if (validForm(inputs) && file) {    
-      firebaseUpload(storageRef, dbRef, form, `/applicant/${uid()}`, file, inputs)
+    if (validForm(form) && file) {    
+      const status = await firebaseUpload(storageRef, dbRef, form, `/applicant/${uid()}`, file, formToObj(form))
+      const message = status ? show(successMessage) : show(errorMessage)
+      setTimeout(() => hide(message), 5000)
     } else {
-      console.log("not valid form")
+      const message = show(errorMessage)
+      setTimeout(() => hide(message), 5000)
     }
+    hide(loader)
   })
 </script>
